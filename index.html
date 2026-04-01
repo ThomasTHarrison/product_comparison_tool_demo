@@ -269,9 +269,11 @@
       <label class="field-label">Utility / market</label>
       <select id="utility-select">
         <option value="">— Select utility —</option>
-        <option value="oncor">Oncor (Dallas–Fort Worth)</option>
-        <option value="centerpoint">CenterPoint (Houston)</option>
-        <option value="aep">AEP Texas (West TX)</option>
+        <option value="hydroone">Hydro One</option>
+        <option value="toronto_hydro">Toronto Hydro</option>
+        <option value="enova">Enova Power</option>
+        <option value="oshawa">Oshawa Power</option>
+        <option value="puc">PUC Distribution (Sault Ste. Marie)</option>
       </select>
     </div>
   </div>
@@ -287,9 +289,11 @@
       <label class="field-label">Select plan</label>
       <select id="our-plan-select">
         <option value="">— Choose a plan —</option>
-        <option value="flex12">Flex 12 — Fixed 12mo</option>
-        <option value="green24">EcoSaver 24 — Green 24mo</option>
-        <option value="variableplus">Variable Plus — Month-to-month</option>
+        <option value="soe_fixed12">SOE Fixed 12 — Fixed 12mo</option>
+        <option value="soe_fixed24">SOE Fixed 24 — Fixed 24mo</option>
+        <option value="soe_green12">SOE Green 12 — Green 12mo</option>
+        <option value="soe_green24">SOE Green 24 — Green 24mo</option>
+        <option value="soe_variable">SOE Variable — Month-to-month</option>
       </select>
       <div id="our-chips" class="chips"></div>
     </div>
@@ -306,9 +310,11 @@
       <label class="field-label">Select competitor</label>
       <select id="comp-select">
         <option value="">— Choose competitor —</option>
-        <option value="griddy">Griddy Energy</option>
-        <option value="pulse">Pulse Power</option>
-        <option value="4change">4Change Energy</option>
+        <option value="je_myenergy5yr">JE MyEnergy 5-Yr (Variable)</option>
+        <option value="je_fixed12">JE Fixed 12</option>
+        <option value="je_fixed24">JE Fixed 24</option>
+        <option value="je_predictabill">JE Predict-a-Bill (Flat fee)</option>
+        <option value="je_green12">JE JustGreen 12</option>
         <option value="manual">Manual entry…</option>
       </select>
       <div id="manual-area" class="manual-area">
@@ -353,16 +359,78 @@
 </div>
 
 <script>
+// ─── OUR PLANS: Save on Energy (Ontario) ────────────────────────────────────
+// NOTE: Replace bill estimates with actuals from your Find-My-Plan tool.
+// Rates sourced from OEB regulated price plan (Nov 2025) + typical retailer
+// contract premiums. Global Adjustment is billed separately on retail contracts.
 const PLANS = {
-  flex12:      { name:'Flex 12',       bill:108, rate:9.4,  type:'Fixed',    term:12, etf:150, renew:15,  credit:50,  cash:0,  features:['$50 bill credit mo 1','No deposit required'] },
-  green24:     { name:'EcoSaver 24',   bill:115, rate:9.9,  type:'Green',    term:24, etf:200, renew:100, credit:75,  cash:25, features:['100% renewable','$25 cash back','$75 bill credit'] },
-  variableplus:{ name:'Variable Plus', bill:118, rate:10.2, type:'Variable', term:0,  etf:0,   renew:20,  credit:0,   cash:15, features:['No contract','$15/mo cash back'] }
+  soe_fixed12: {
+    name: 'SOE Fixed 12',
+    bill: 132, rate: 11.4, type: 'Fixed', term: 12, etf: 150,
+    renew: 17, credit: 0, cash: 0,
+    features: ['Fixed rate — price locked 12 mo', 'No deposit required', 'OEB-licensed retailer']
+  },
+  soe_fixed24: {
+    name: 'SOE Fixed 24',
+    bill: 128, rate: 11.1, type: 'Fixed', term: 24, etf: 200,
+    renew: 17, credit: 25, cash: 0,
+    features: ['Fixed rate — price locked 24 mo', '$25 bill credit on signup', 'Rate lower than 12-mo plan']
+  },
+  soe_green12: {
+    name: 'SOE Green 12',
+    bill: 138, rate: 11.9, type: 'Green', term: 12, etf: 150,
+    renew: 100, credit: 0, cash: 0,
+    features: ['100% renewable-backed', 'RECs included', 'Fixed rate — price locked 12 mo']
+  },
+  soe_green24: {
+    name: 'SOE Green 24',
+    bill: 135, rate: 11.6, type: 'Green', term: 24, etf: 200,
+    renew: 100, credit: 30, cash: 0,
+    features: ['100% renewable-backed', '$30 bill credit on signup', 'Fixed rate — price locked 24 mo']
+  },
+  soe_variable: {
+    name: 'SOE Variable',
+    bill: 141, rate: 12.1, type: 'Variable', term: 0, etf: 0,
+    renew: 17, credit: 0, cash: 10,
+    features: ['No contract — cancel anytime', '$10/mo bill credit', 'Rate tracks market monthly']
+  }
 };
 
+// ─── COMPETITOR PLANS: Just Energy (Ontario) ─────────────────────────────────
+// NOTE: Just Energy does not publish live rates publicly — rates below are
+// based on their documented plan structures and publicly cited rate ranges.
+// Update these with scraped or quoted actuals when available.
 const COMPS = {
-  griddy:  { name:'Griddy Energy', bill:122, rate:10.1, type:'Variable', term:0,  etf:0,   renew:5,  credit:0,  cash:0,  source:'Scraped' },
-  pulse:   { name:'Pulse Power',   bill:110, rate:9.6,  type:'Fixed',    term:12, etf:175, renew:0,  credit:25, cash:0,  source:'Scraped' },
-  '4change':{ name:'4Change',      bill:105, rate:9.0,  type:'Fixed',    term:12, etf:125, renew:50, credit:0,  cash:0,  source:'Scraped' }
+  je_myenergy5yr: {
+    name: 'JE MyEnergy 5-Yr',
+    bill: 148, rate: 12.8, type: 'Variable', term: 60, etf: 0,
+    renew: 0, credit: 0, cash: 0, source: 'Just Energy',
+    note: 'Variable rate capped at ~13¢/kWh; excl. Global Adjustment'
+  },
+  je_fixed12: {
+    name: 'JE Fixed 12',
+    bill: 145, rate: 12.5, type: 'Fixed', term: 12, etf: 200,
+    renew: 0, credit: 0, cash: 0, source: 'Just Energy',
+    note: 'Fixed rate contract; Global Adjustment billed separately'
+  },
+  je_fixed24: {
+    name: 'JE Fixed 24',
+    bill: 142, rate: 12.2, type: 'Fixed', term: 24, etf: 250,
+    renew: 0, credit: 0, cash: 0, source: 'Just Energy',
+    note: 'Fixed rate contract; Global Adjustment billed separately'
+  },
+  je_predictabill: {
+    name: 'JE Predict-a-Bill',
+    bill: 150, rate: null, type: 'Fixed', term: 60, etf: 300,
+    renew: 0, credit: 0, cash: 0, source: 'Just Energy',
+    note: 'Flat $49.99/mo fee regardless of usage; excl. Global Adjustment'
+  },
+  je_green12: {
+    name: 'JE JustGreen 12',
+    bill: 152, rate: 13.1, type: 'Green', term: 12, etf: 200,
+    renew: 100, credit: 0, cash: 0, source: 'Just Energy',
+    note: '100% green offset via carbon credits; fixed rate'
+  }
 };
 
 const PITCH_LANG = {
