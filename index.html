@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -270,11 +269,11 @@
       <label class="field-label">Utility / market</label>
       <select id="utility-select">
         <option value="">— Select utility —</option>
-        <option value="hydroone">Hydro One</option>
-        <option value="toronto_hydro">Toronto Hydro</option>
-        <option value="enova">Enova Power</option>
-        <option value="oshawa">Oshawa Power</option>
-        <option value="puc">PUC Distribution (Sault Ste. Marie)</option>
+        <option value="oncor">Oncor Electric (Dallas–Fort Worth)</option>
+        <option value="centerpoint">CenterPoint Energy (Houston)</option>
+        <option value="aep_central">AEP Central (Corpus Christi)</option>
+        <option value="aep_north">AEP North (Abilene / Wichita Falls)</option>
+        <option value="tnmp">Texas-New Mexico Power (TNMP)</option>
       </select>
     </div>
   </div>
@@ -290,11 +289,11 @@
       <label class="field-label">Select plan</label>
       <select id="our-plan-select">
         <option value="">— Choose a plan —</option>
-        <option value="soe_fixed12">SOE Fixed 12 — Fixed 12mo</option>
-        <option value="soe_fixed24">SOE Fixed 24 — Fixed 24mo</option>
-        <option value="soe_green12">SOE Green 12 — Green 12mo</option>
-        <option value="soe_green24">SOE Green 24 — Green 24mo</option>
-        <option value="soe_variable">SOE Variable — Month-to-month</option>
+        <option value="flex12">Flex 12 — Fixed 12mo</option>
+        <option value="green24">EcoSaver 24 — Green 24mo</option>
+        <option value="freenights">Free Nights 12 — Fixed 12mo</option>
+        <option value="freeweekends">Free Weekends 12 — Fixed 12mo</option>
+        <option value="variableplus">Variable Plus — Month-to-month</option>
       </select>
       <div id="our-chips" class="chips"></div>
     </div>
@@ -311,11 +310,10 @@
       <label class="field-label">Select competitor</label>
       <select id="comp-select">
         <option value="">— Choose competitor —</option>
-        <option value="je_myenergy5yr">JE MyEnergy 5-Yr (Variable)</option>
-        <option value="je_fixed12">JE Fixed 12</option>
-        <option value="je_fixed24">JE Fixed 24</option>
-        <option value="je_predictabill">JE Predict-a-Bill (Flat fee)</option>
-        <option value="je_green12">JE JustGreen 12</option>
+        <option value="reliant_fixed12">Reliant — Fixed 12mo</option>
+        <option value="txu_fixed12">TXU Energy — Fixed 12mo</option>
+        <option value="gexa_green12">Gexa Energy — Green 12mo</option>
+        <option value="constellation_fixed12">Constellation — Fixed 12mo</option>
         <option value="manual">Manual entry…</option>
       </select>
       <div id="manual-area" class="manual-area">
@@ -326,8 +324,8 @@
           <div><label>Term (months)</label><input type="number" id="m-term" placeholder="e.g. 12"></div>
           <div><label>ETF ($)</label><input type="number" id="m-etf" placeholder="e.g. 150"></div>
           <div><label>Renewable (%)</label><input type="number" id="m-renew" placeholder="e.g. 0"></div>
-          <div><label>Bill credit ($)</label><input type="number" id="m-credit" placeholder="e.g. 0"></div>
-          <div><label>Cash back ($)</label><input type="number" id="m-cash" placeholder="e.g. 0"></div>
+          <div><label>Plan features</label><input type="text" id="m-cash" placeholder="Free nights, cash back…"></div>
+          <div><label>Sat. guarantee (days)</label><input type="number" id="m-sat" placeholder="e.g. 0"></div>
         </div>
       </div>
     </div>
@@ -365,86 +363,37 @@
 // Rates sourced from OEB regulated price plan (Nov 2025) + typical retailer
 // contract premiums. Global Adjustment is billed separately on retail contracts.
 const PLANS = {
-  soe_fixed12: {
-    name: 'SOE Fixed 12',
-    bill: 132, rate: 11.4, type: 'Fixed', term: 12, etf: 150,
-    renew: 17, credit: 0, cash: 0,
-    features: ['Fixed rate — price locked 12 mo', 'No deposit required', 'OEB-licensed retailer']
-  },
-  soe_fixed24: {
-    name: 'SOE Fixed 24',
-    bill: 128, rate: 11.1, type: 'Fixed', term: 24, etf: 200,
-    renew: 17, credit: 25, cash: 0,
-    features: ['Fixed rate — price locked 24 mo', '$25 bill credit on signup', 'Rate lower than 12-mo plan']
-  },
-  soe_green12: {
-    name: 'SOE Green 12',
-    bill: 138, rate: 11.9, type: 'Green', term: 12, etf: 150,
-    renew: 100, credit: 0, cash: 0,
-    features: ['100% renewable-backed', 'RECs included', 'Fixed rate — price locked 12 mo']
-  },
-  soe_green24: {
-    name: 'SOE Green 24',
-    bill: 135, rate: 11.6, type: 'Green', term: 24, etf: 200,
-    renew: 100, credit: 30, cash: 0,
-    features: ['100% renewable-backed', '$30 bill credit on signup', 'Fixed rate — price locked 24 mo']
-  },
-  soe_variable: {
-    name: 'SOE Variable',
-    bill: 141, rate: 12.1, type: 'Variable', term: 0, etf: 0,
-    renew: 17, credit: 0, cash: 10,
-    features: ['No contract — cancel anytime', '$10/mo bill credit', 'Rate tracks market monthly']
-  }
+  flex12:      { name:'Flex 12',         bill:118, rate:10.2, type:'Fixed',    term:12, etf:150, renew:15,  credit:50, features:['$50 bill credit mo 1'], satDays:30 },
+  green24:     { name:'EcoSaver 24',     bill:122, rate:10.5, type:'Green',    term:24, etf:200, renew:100, credit:75, features:['$75 bill credit on signup'], satDays:60 },
+  freenights:  { name:'Free Nights 12',  bill:112, rate:10.8, type:'Fixed',    term:12, etf:150, renew:10,  credit:0,  features:['Free electricity 9pm–6am daily','Fixed daytime rate'], satDays:30 },
+  freeweekends:{ name:'Free Weekends 12',bill:115, rate:10.6, type:'Fixed',    term:12, etf:150, renew:10,  credit:0,  features:['Free electricity Sat–Sun all day','Fixed weekday rate'], satDays:30 },
+  variableplus:{ name:'Variable Plus',   bill:134, rate:11.8, type:'Variable', term:0,  etf:0,   renew:5,   credit:0,  features:['No contract — cancel anytime','$10/mo cash back'], satDays:0 }
 };
 
-// ─── COMPETITOR PLANS: Just Energy (Ontario) ─────────────────────────────────
-// NOTE: Just Energy does not publish live rates publicly — rates below are
-// based on their documented plan structures and publicly cited rate ranges.
-// Update these with scraped or quoted actuals when available.
 const COMPS = {
-  je_myenergy5yr: {
-    name: 'JE MyEnergy 5-Yr',
-    bill: 148, rate: 12.8, type: 'Variable', term: 60, etf: 0,
-    renew: 0, credit: 0, cash: 0, source: 'Just Energy',
-    note: 'Variable rate capped at ~13¢/kWh; excl. Global Adjustment'
-  },
-  je_fixed12: {
-    name: 'JE Fixed 12',
-    bill: 145, rate: 12.5, type: 'Fixed', term: 12, etf: 200,
-    renew: 0, credit: 0, cash: 0, source: 'Just Energy',
-    note: 'Fixed rate contract; Global Adjustment billed separately'
-  },
-  je_fixed24: {
-    name: 'JE Fixed 24',
-    bill: 142, rate: 12.2, type: 'Fixed', term: 24, etf: 250,
-    renew: 0, credit: 0, cash: 0, source: 'Just Energy',
-    note: 'Fixed rate contract; Global Adjustment billed separately'
-  },
-  je_predictabill: {
-    name: 'JE Predict-a-Bill',
-    bill: 150, rate: null, type: 'Fixed', term: 60, etf: 300,
-    renew: 0, credit: 0, cash: 0, source: 'Just Energy',
-    note: 'Flat $49.99/mo fee regardless of usage; excl. Global Adjustment'
-  },
-  je_green12: {
-    name: 'JE JustGreen 12',
-    bill: 152, rate: 13.1, type: 'Green', term: 12, etf: 200,
-    renew: 100, credit: 0, cash: 0, source: 'Just Energy',
-    note: '100% green offset via carbon credits; fixed rate'
-  }
+  reliant_fixed12:      { name:'Reliant Fixed 12',       bill:128, rate:11.2, type:'Fixed', term:12, etf:175, renew:0,   credit:25, features:['$25 bill credit on signup'], satDays:0, note:'Rate sourced from PowerToChoose.org' },
+  txu_fixed12:          { name:'TXU Energy Fixed 12',    bill:132, rate:11.5, type:'Fixed', term:12, etf:200, renew:0,   credit:0,  features:['No notable perks'], satDays:0, note:'Rate sourced from PowerToChoose.org' },
+  gexa_green12:         { name:'Gexa Green 12',          bill:119, rate:10.3, type:'Green', term:12, etf:150, renew:100, credit:0,  features:['No notable perks'], satDays:0, note:'Rate sourced from PowerToChoose.org' },
+  constellation_fixed12:{ name:'Constellation Fixed 12', bill:130, rate:11.3, type:'Fixed', term:12, etf:150, renew:0,   credit:0,  features:['No notable perks'], satDays:0, note:'Rate sourced from PowerToChoose.org' }
 };
 
 const PITCH_LANG = {
-  fixed_vs_variable: 'Our plan is a fixed-rate plan — the rate is locked in and won\'t move with the market. Variable rates can spike significantly in peak summer months, which is a real risk customers often don\'t price in.',
-  variable_vs_fixed: 'Our variable plan offers maximum flexibility — no contract, no ETF, and they can switch at any time. For customers who don\'t want to be locked in, this is the right call.',
-  green_vs_fixed:    'Our plan is 100% renewable-backed. For customers who care about their environmental footprint, we\'re the clear choice — and they\'re not paying a significant premium for it.',
-  green_vs_variable: 'Our plan is 100% renewable and fixed-rate — they get price certainty and clean energy in one plan. Hard to beat that combination.',
-  fixed_vs_green:    'Our plan gives cost certainty without the green premium. If the customer\'s primary driver is the lowest predictable bill, we\'re the straightforward choice.',
-  variable_vs_green: 'Our plan gives complete flexibility with no contract. If the customer is rate-shopping and doesn\'t want to commit, this is the right fit for them.'
+  fixed_vs_variable: 'Our fixed plan locks in the rate for the full term — customers won\'t see surprise spikes from market swings. Variable rates in Texas can jump sharply during peak summer heat events.',
+  variable_vs_fixed: 'Our variable plan has no contract and no ETF — customers can switch or cancel with zero penalty. Great pitch for anyone who doesn\'t want to commit.',
+  green_vs_fixed:    'Our plan is 100% renewable-backed. For eco-conscious customers, it\'s an easy sell — and the rate is competitive against standard fixed plans.',
+  green_vs_variable: 'Our plan delivers both rate certainty and 100% clean energy — a combination that\'s hard to find and easy to pitch as premium value.',
+  fixed_vs_green:    'Our plan gives full rate certainty without a green premium — the cleaner story for callers whose primary driver is the lowest predictable bill.',
+  variable_vs_green: 'No contract, no ETF, maximum flexibility. For rate-shoppers not ready to commit, this is the right call.'
 };
 
+const FEAT_PERKS = ['free night','free weekend','cash back','bill credit','smart thermostat'];
+
 document.getElementById('comp-select').addEventListener('change', function() {
+  const c = COMPS[this.value];
   document.getElementById('manual-area').classList.toggle('visible', this.value === 'manual');
+  const note = document.getElementById('comp-note');
+  if (c && c.note) { note.textContent = c.note; note.style.display = 'block'; }
+  else note.style.display = 'none';
 });
 
 document.getElementById('our-plan-select').addEventListener('change', function() {
@@ -464,19 +413,27 @@ function getComp() {
   const sel = document.getElementById('comp-select').value;
   if (!sel) return null;
   if (sel === 'manual') {
+    const raw = document.getElementById('m-cash').value.trim();
     return {
-      name: 'Manual entry', source: 'Manual',
-      bill:   parseFloat(document.getElementById('m-bill').value)   || null,
-      rate:   parseFloat(document.getElementById('m-rate').value)   || null,
-      type:   document.getElementById('m-type').value.trim()        || null,
-      term:   parseFloat(document.getElementById('m-term').value)   || null,
-      etf:    parseFloat(document.getElementById('m-etf').value)    || null,
-      renew:  parseFloat(document.getElementById('m-renew').value)  || null,
-      credit: parseFloat(document.getElementById('m-credit').value) || null,
-      cash:   parseFloat(document.getElementById('m-cash').value)   || null
+      name: 'Manual entry',
+      bill:    parseFloat(document.getElementById('m-bill').value)   || null,
+      rate:    parseFloat(document.getElementById('m-rate').value)   || null,
+      type:    document.getElementById('m-type').value.trim()        || null,
+      term:    parseFloat(document.getElementById('m-term').value)   || null,
+      etf:     parseFloat(document.getElementById('m-etf').value)    || null,
+      renew:   parseFloat(document.getElementById('m-renew').value)  || null,
+      credit:  parseFloat(document.getElementById('m-credit').value) || null,
+      features: raw ? raw.split(',').map(s => s.trim()) : [],
+      satDays: parseFloat(document.getElementById('m-sat').value)    || 0
     };
   }
   return COMPS[sel] || null;
+}
+
+function calcFeatWin(ourFeats, compFeats) {
+  const ol = ourFeats.map(f => f.toLowerCase());
+  const cl = compFeats.map(f => f.toLowerCase());
+  return FEAT_PERKS.some(p => ol.some(f => f.includes(p)) && !cl.some(f => f.includes(p)));
 }
 
 function runComparison() {
@@ -486,17 +443,45 @@ function runComparison() {
   if (!our || !comp) { alert('Please select both a plan and a competitor first.'); return; }
 
   document.getElementById('our-col-hdr').textContent = our.name;
-  document.getElementById('comp-col-hdr').textContent = comp.name + (comp.source ? ' (' + comp.source + ')' : '');
+  document.getElementById('comp-col-hdr').textContent = comp.name + (comp.note ? '' : '');
+
+  const ourFeatWin = calcFeatWin(our.features, comp.features || []);
+  const ourSatWin  = (our.satDays || 0) > (comp.satDays || 0);
 
   const ROWS = [
-    { label:'Avg. bill estimate', key:'bill',   fmt: v => v != null ? '$' + v.toFixed(0)        : '—', win:(o,c)=>o<c, highlight:true },
-    { label:'Energy charge',      key:'rate',   fmt: v => v != null ? v.toFixed(1) + '¢/kWh'    : '—', win:(o,c)=>o<c, highlight:true },
-    { label:'Plan type',          key:'type',   fmt: v => v || '—',                                   win: null },
-    { label:'Term',               key:'term',   fmt: v => v === 0 ? 'Month-to-month' : v != null ? v + ' mo' : '—', win: null },
-    { label:'ETF',                key:'etf',    fmt: v => v != null ? (v === 0 ? 'None' : '$' + v) : '—', win:(o,c)=>o<c },
-    { label:'Renewable',          key:'renew',  fmt: v => v != null ? v + '%'                    : '—', win:(o,c)=>o>c },
-    { label:'Bill credit',        key:'credit', fmt: v => v != null ? (v > 0 ? '$' + v : 'None') : '—', win:(o,c)=>o>c },
-    { label:'Cash back',          key:'cash',   fmt: v => v != null ? (v > 0 ? '$' + v + '/mo' : 'None') : '—', win:(o,c)=>o>c }
+    { label:'Avg. bill estimate', key:'bill',    fmtO: v => v != null ? '
+</script>
+</body>
+</html>
+ + v.toFixed(0) : '—',          fmtC: v => v != null ? '
+</script>
+</body>
+</html>
+ + v.toFixed(0) : '—',          win:(o,c)=>o<c, highlight:true },
+    { label:'Energy charge',      key:'rate',    fmtO: v => v != null ? v.toFixed(1) + '¢/kWh' : '—',      fmtC: v => v != null ? v.toFixed(1) + '¢/kWh' : '—',      win:(o,c)=>o<c, highlight:true },
+    { label:'Plan type',          key:'type',    fmtO: v => v || '—',                                       fmtC: v => v || '—',                                       win: null },
+    { label:'Term',               key:'term',    fmtO: v => v === 0 ? 'Month-to-month' : v != null ? v + ' mo' : '—', fmtC: v => v === 0 ? 'Month-to-month' : v != null ? v + ' mo' : '—', win: null },
+    { label:'ETF',                key:'etf',     fmtO: v => v != null ? (v === 0 ? 'None' : '
+</script>
+</body>
+</html>
+ + v) : '—', fmtC: v => v != null ? (v === 0 ? 'None' : '
+</script>
+</body>
+</html>
+ + v) : '—', win:(o,c)=>o<c },
+    { label:'Renewable',          key:'renew',   fmtO: v => v != null ? v + '%' : '—',                      fmtC: v => v != null ? v + '%' : '—',                      win:(o,c)=>o>c },
+    { label:'Bill credit',        key:'credit',  fmtO: v => v != null ? (v > 0 ? '
+</script>
+</body>
+</html>
+ + v : 'None') : '—',   fmtC: v => v != null ? (v > 0 ? '
+</script>
+</body>
+</html>
+ + v : 'None') : '—',   win:(o,c)=>o>c },
+    { label:'Plan features',      key:'features', special:'features', win: () => ourFeatWin },
+    { label:'Sat. guarantee',     key:'satDays', fmtO: v => v > 0 ? v + '-day guarantee' : 'None',          fmtC: v => v > 0 ? v + '-day guarantee' : 'None',          win:(o,c)=>o>c }
   ];
 
   const body = document.getElementById('grid-body');
@@ -504,47 +489,90 @@ function runComparison() {
   const allWins = [], primaryWins = [];
 
   ROWS.forEach(r => {
-    const ov = our[r.key], cv = comp[r.key];
-    const weWin = r.win && ov != null && cv != null ? r.win(ov, cv) : false;
+    const ov = our[r.key];
+    const cv = comp[r.key] !== undefined ? comp[r.key] : null;
+    let weWin = false;
+    if (r.special === 'features') weWin = ourFeatWin;
+    else if (r.win && ov != null && cv != null) weWin = r.win(ov, cv);
     if (weWin) { allWins.push(r); if (r.highlight) primaryWins.push(r); }
 
     const row = document.createElement('div');
     row.className = 'grid-row' + (weWin ? ' win-row' : '');
-    row.innerHTML =
-      '<div class="row-label">' + r.label + (weWin ? '<span class="win-chip">We win</span>' : '') + '</div>' +
-      '<div class="row-val' + (weWin ? ' win' : '') + '">' + r.fmt(ov) + '</div>' +
-      '<div class="row-val' + (weWin && cv != null ? ' loss' : '') + '">' + r.fmt(cv) + '</div>';
+
+    let ourCell, compCell;
+    if (r.special === 'features') {
+      const of = (our.features || []).filter(f => !f.toLowerCase().includes('renew'));
+      const cf = (comp.features || []).filter(f => !f.toLowerCase().includes('renew'));
+      const fmtList = (arr, win) => arr.length
+        ? arr.map(f => `<span style="display:block;font-size:12px;${win?'font-weight:500;color:var(--green-text)':''}">${f}</span>`).join('')
+        : '<span style="font-size:12px;color:var(--text-muted)">None</span>';
+      ourCell  = `<div class="row-val${weWin?' win':''}" style="text-align:right">${fmtList(of, weWin)}</div>`;
+      compCell = `<div class="row-val" style="text-align:right">${fmtList(cf, false)}</div>`;
+    } else {
+      ourCell  = `<div class="row-val${weWin?' win':''}">${r.fmtO(ov)}</div>`;
+      compCell = `<div class="row-val${weWin && cv != null?' loss':''}">${r.fmtC(cv)}</div>`;
+    }
+
+    row.innerHTML = `<div class="row-label">${r.label}${weWin ? '<span class="win-chip">We win</span>' : ''}</div>${ourCell}${compCell}`;
     body.appendChild(row);
   });
 
-  buildPitches(our, comp, primaryWins, allWins);
+  buildPitches(our, comp, primaryWins, allWins, ourFeatWin, ourSatWin);
   document.getElementById('results').style.display = 'block';
   document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function buildPitches(our, comp, primaryWins, allWins) {
+function buildPitches(our, comp, primaryWins, allWins, featWinFlag, satWinFlag) {
   const pb = document.getElementById('pitch-blocks');
   pb.innerHTML = '';
   const blocks = [];
 
   if (primaryWins.length) {
     const pts = primaryWins.map(r => {
-      if (r.key === 'bill') return 'avg. bill of $' + our.bill.toFixed(0) + ' vs. their $' + (comp.bill ? comp.bill.toFixed(0) : 'unknown');
+      if (r.key === 'bill') return 'avg. bill of 
+</script>
+</body>
+</html>
+ + our.bill.toFixed(0) + ' vs. their 
+</script>
+</body>
+</html>
+ + (comp.bill ? comp.bill.toFixed(0) : 'unknown');
       if (r.key === 'rate') return 'energy rate of ' + our.rate.toFixed(1) + '¢/kWh vs. their ' + (comp.rate != null ? comp.rate.toFixed(1) + '¢/kWh' : 'unknown');
     }).filter(Boolean);
     const saving = comp.bill ? Math.max(0, comp.bill - our.bill).toFixed(0) : null;
-    blocks.push({ type:'primary', tag:'Lead with price', text: 'Open with cost — ' + pts.join(' and ') + '. Frame it as: "Based on your usage, you\'d likely save' + (saving ? ' around $' + saving + '/mo' : '') + ' compared to what you\'re on now."' });
+    blocks.push({ type:'primary', tag:'Lead with price', text: 'Open with cost — ' + pts.join(' and ') + '. Frame it: "Based on your usage, you\'d likely save' + (saving ? ' ~
+</script>
+</body>
+</html>
+ + saving + '/mo' : '') + ' compared to what you\'re on now."' });
   }
 
-  const otherWins = allWins.filter(r => !r.highlight && r.key !== 'term');
-  if (otherWins.length) {
-    const pts = otherWins.map(r => {
-      if (r.key === 'etf')    return comp.etf > 0 ? 'no ETF vs. their $' + comp.etf + ' cancellation fee' : 'lower ETF';
-      if (r.key === 'renew')  return our.renew + '% renewable vs. their ' + (comp.renew != null ? comp.renew + '%' : 'unknown');
-      if (r.key === 'credit') return '$' + our.credit + ' bill credit included';
-      if (r.key === 'cash')   return '$' + our.cash + '/mo cash back';
-    }).filter(Boolean);
-    if (pts.length) blocks.push({ type:'secondary', tag:'Value adds', text: 'Beyond price, highlight: ' + pts.join(', ') + '. Emphasize these are already baked in — nothing extra to sign up for.' });
+  const lines = [];
+  allWins.filter(r => !r.highlight && r.key !== 'term' && r.special !== 'features' && r.key !== 'satDays').forEach(r => {
+    if (r.key === 'etf' && comp.etf > 0) lines.push('no ETF vs. their 
+</script>
+</body>
+</html>
+ + comp.etf + ' cancellation fee');
+    else if (r.key === 'etf') lines.push('lower ETF');
+    if (r.key === 'renew') lines.push(our.renew + '% renewable vs. their ' + (comp.renew != null ? comp.renew + '%' : 'unknown'));
+    if (r.key === 'credit') lines.push('
+</script>
+</body>
+</html>
+ + our.credit + ' bill credit included at signup');
+  });
+  if (featWinFlag) {
+    const perks = our.features.filter(f => FEAT_PERKS.some(p => f.toLowerCase().includes(p)));
+    if (perks.length) lines.push('unique perks: ' + perks.join(', '));
+  }
+  if (satWinFlag) lines.push(our.satDays + '-day satisfaction guarantee — they can leave penalty-free if not happy');
+
+  if (lines.length) {
+    blocks.push({ type:'secondary', tag:'Value adds', text: 'Beyond price, highlight: ' + lines.join('; ') + '. These are already baked in — nothing extra to sign up for.' });
+  } else if (!primaryWins.length) {
+    blocks.push({ type:'secondary', tag:'Shift the conversation', text: 'The competitor has a lower rate on this one. Redirect to what matters beyond price: no ETF means no risk to try us, our satisfaction guarantee means they can leave if unhappy, and our perks may offset the difference in their monthly bill.' });
   }
 
   if (comp.type && our.type && comp.type !== our.type) {
@@ -553,11 +581,7 @@ function buildPitches(our, comp, primaryWins, allWins) {
     if (lang) blocks.push({ type:'alt-type', tag:'Plan type difference', text: lang });
   }
 
-  if (!blocks.length) {
-    pb.innerHTML = '<div class="empty-state">No pitch advantages identified on this comparison.</div>';
-    return;
-  }
-
+  if (!blocks.length) { pb.innerHTML = '<div class="empty-state">No pitch advantages identified on this comparison.</div>'; return; }
   blocks.forEach(b => {
     const el = document.createElement('div');
     el.className = 'pitch-block ' + b.type;
